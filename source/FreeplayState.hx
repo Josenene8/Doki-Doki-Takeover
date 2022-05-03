@@ -139,6 +139,10 @@ class FreeplayState extends MusicBeatState
 		// add(selector);
 
 		var swag:Alphabet = new Alphabet(1, 0, "swag");
+		
+                #if mobileC
+		addVirtualPad(FULL, A_B);
+		#end
 
 		super.create();
 	}
