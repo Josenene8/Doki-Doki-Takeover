@@ -3,15 +3,15 @@ package;
 import Conductor.BPMChangeEvent;
 import flixel.FlxG;
 import flixel.FlxSubState;
-import flixel.util.FlxColor;
-import openfl.Lib;
+#if mobileC
+import ui.FlxVirtualPad;
+#end
+import flixel.input.actions.FlxActionInput;
 
 class MusicBeatSubstate extends FlxSubState
 {
 	public function new()
 	{
-		(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
-
 		super();
 	}
 
@@ -25,23 +25,37 @@ class MusicBeatSubstate extends FlxSubState
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
 
-	var array:Array<FlxColor> = [
-		FlxColor.fromRGB(148, 0, 211),
-		FlxColor.fromRGB(75, 0, 130),
-		FlxColor.fromRGB(0, 0, 255),
-		FlxColor.fromRGB(0, 255, 0),
-		FlxColor.fromRGB(255, 255, 0),
-		FlxColor.fromRGB(255, 127, 0),
-		FlxColor.fromRGB(255, 0, 0)
-	];
+	#if mobileC
+	var _virtualpad:FlxVirtualPad;
 
-	var skippedFrames = 0;
+	var trackedinputs:Array<FlxActionInput> = [];
 
-	public static var currentColor = 0;
+	// adding virtualpad to state
+	public function addVirtualPad(?DPad:FlxDPadMode, ?Action:FlxActionMode) {
+		_virtualpad = new FlxVirtualPad(DPad, Action);
+		_virtualpad.alpha = 0.75;
+		add(_virtualpad);
+		controls.setVirtualPad(_virtualpad, DPad, Action);
+		trackedinputs = controls.trackedinputs;
+		controls.trackedinputs = [];
+
+		#if android
+		controls.addAndroidBack();
+		#end
+	}
+
+	override function destroy() {
+		controls.removeFlxInput(trackedinputs);
+
+		super.destroy();
+	}
+	#else
+	public function addVirtualPad(?DPad, ?Action){};
+	#end	
 
 	override function update(elapsed:Float)
 	{
-		// everyStep();
+		//everyStep();
 		var oldStep:Int = curStep;
 
 		updateCurStep();
@@ -50,19 +64,6 @@ class MusicBeatSubstate extends FlxSubState
 		if (oldStep != curStep && curStep > 0)
 			stepHit();
 
-		if (FlxG.save.data.fpsRain && skippedFrames >= 6)
-		{
-			if (currentColor >= array.length)
-				currentColor = 0;
-			(cast(Lib.current.getChildAt(0), Main)).changeFPSColor(array[currentColor]);
-			currentColor++;
-			skippedFrames = 0;
-		}
-		else
-			skippedFrames++;
-
-		if ((cast(Lib.current.getChildAt(0), Main)).getFPSCap != FlxG.save.data.fpsCap && FlxG.save.data.fpsCap <= 330)
-			(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
 
 		super.update(elapsed);
 	}
@@ -91,6 +92,6 @@ class MusicBeatSubstate extends FlxSubState
 
 	public function beatHit():Void
 	{
-		// do literally nothing dumbass
+		//do literally nothing dumbass
 	}
 }
